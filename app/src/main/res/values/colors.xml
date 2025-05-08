@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#FF6200EE</color>
+    <color name="primaryDark">#FF3700B3</color>
+    <color name="primaryLight">#FFBB86FC</color>
+    <color name="secondary">#FF03DAC6</color>
+    <color name="background">#FFF5F5F5</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="error">#FFB00020</color>
+    <color name="primaryText">#DE000000</color>
+    <color name="secondaryText">#8A000000</color>
+
+    <!-- BMI Colors -->
+    <color name="severeThinness">#2196F3</color>       <!-- Blue -->
+    <color name="moderateThinness">#03A9F4</color>     <!-- Light Blue -->
+    <color name="mildThinness">#00BCD4</color>         <!-- Cyan -->
+    <color name="normal">#4CAF50</color>               <!-- Green -->
+    <color name="overweight">#FFC107</color>           <!-- Amber -->
+    <color name="obese1">#FF9800</color>               <!-- Orange -->
+    <color name="obese2">#FF5722</color>               <!-- Deep Orange -->
+    <color name="obese3">#F44336</color>               <!-- Red -->
+
+</resources>
