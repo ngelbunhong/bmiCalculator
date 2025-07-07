@@ -1,3 +1,50 @@
 <resources>
-    <string name="app_name">BMI</string>
+    <string name="app_name">BMI Calculator</string>
+
+    <string name="error_positive_values">Values must be positive</string>
+    <string name="error_invalid_numbers">Please enter valid numbers</string>
+
+    <string name="bmi_result_format">BMI: %.1f</string>
+    <string name="healthy_range_kg">Healthy range: %.1f - %.1f kg</string>
+    <string name="healthy_range_lbs">Healthy range: %.1f - %.1f lbs</string>
+
+    <string name="category_severe_thinness">Severe Thinness (&lt;16)</string>
+    <string name="category_moderate_thinness">Moderate Thinness (16-17)</string>
+    <string name="category_mild_thinness">Mild Thinness (17-18.5)</string>
+    <string name="category_normal">Normal (18.5-25)</string>
+    <string name="category_overweight">Overweight (25-30)</string>
+    <string name="category_obese1">Obese Class I (30-35)</string>
+    <string name="category_obese2">Obese Class II (35-40)</string>
+    <string name="category_obese3">Obese Class III (&gt;40)</string>
+
+    <string name="tip_severe_thinness">Your health is the priority. Please consult with a healthcare professional for guidance.</string>
+    <string name="tip_moderate_thinness">Focus on nutrient-rich foods to build strength. A healthcare provider can offer personalized advice.</string>
+    <string name="tip_mild_thinness">A balanced diet with sufficient protein and healthy fats can help you reach a healthier weight.</string>
+    <string name="tip_normal">You\'re doing great! Maintain your healthy habits with a balanced diet and regular physical activity.</string>
+    <string name="tip_overweight">Small changes make a big difference. Try incorporating a 30-minute walk into your daily routine.</string>
+    <string name="tip_obese1">A structured plan for diet and exercise can significantly improve your health. Consider speaking with a professional.</string>
+    <string name="tip_obese2">Prioritizing your health is key. A healthcare provider can help you create a safe and effective plan.</string>
+    <string name="tip_obese3">Your well-being is important. Please seek professional medical guidance to create a comprehensive health plan.</string>
+
+    <string name="desc_severe_thinness">Severely underweight - High health risk, consult doctor</string>
+    <string name="desc_moderate_thinness">Moderately underweight - Moderate health risk</string>
+    <string name="desc_mild_thinness">Mildly underweight - Mild health risk</string>
+    <string name="desc_normal">Healthy weight - Low health risk</string>
+    <string name="desc_overweight">Overweight - Increased health risk</string>
+    <string name="desc_obese1">Obese Class I - High health risk</string>
+    <string name="desc_obese2">Obese Class II - Very high health risk</string>
+    <string name="desc_obese3">Obese Class III - Extremely high health risk</string>
+
+    <string name="dialog_title">WHO BMI Classification</string>
+    <string name="dialog_ok_button">OK</string>
+    <string name="dialog_message">
+        Severe Thinness: &lt; 16\n
+        Moderate Thinness: 16 - 17\n
+        Mild Thinness: 17 - 18.5\n
+        Normal: 18.5 - 25\n
+        Overweight: 25 - 30\n
+        Obese Class I: 30 - 35\n
+        Obese Class II: 35 - 40\n
+        Obese Class III: &gt; 40
+    </string>
 </resources>

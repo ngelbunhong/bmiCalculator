@@ -54,5 +54,10 @@ dependencies {
 
     implementation(libs.mpandroidchart) // Add this line
 
+    // For ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
+    // For the by viewModels() delegate
+    implementation("androidx.activity:activity-ktx:1.9.0")
+
 
 }
