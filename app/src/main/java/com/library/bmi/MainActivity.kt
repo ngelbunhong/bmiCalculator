@@ -3,10 +3,16 @@ package com.library.bmi
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.library.bmi.data.factory.BmiViewModelFactory
 import com.library.bmi.databinding.ActivityMainBinding
@@ -28,142 +34,228 @@ class MainActivity : BaseActivity() {
         setContentView(binding.root)
 
         hideKeyboard()
+        setupUI()
+        observeViewModel()
+    }
+
+    private fun setupUI() {
         setupUnitToggle()
         setupCalculateButton()
-        setupReferenceButton()
-        observeViewModel()
         setupSaveButton()
         setupHistoryButton()
+        setupGaugeChart()
+        binding.referenceButton.setOnClickListener {
+            showLegendDialog()
+        }
     }
 
-    // Observe the LiveData from the ViewModel
     private fun observeViewModel() {
         viewModel.bmiResult.observe(this) { result ->
-            if (result != null) {
-                displayResults(result)
-            } else {
-                binding.resultCard.visibility = View.GONE
-            }
+            if (result != null) displayResults(result)
+            else binding.resultCard.visibility = View.GONE
         }
 
-        // ✅ Observe the error resource ID and get the string here.
-        viewModel.errorEvent.observe(this) { messageResId ->
-            showError(getString(messageResId))
+        viewModel.errorEvent.observe(this) {
+            showError(getString(it))
         }
     }
 
-    private fun setupUnitToggle() {
-        binding.unitRadioGroup.setOnCheckedChangeListener { _, _ ->
-            // Switch visibility
-            binding.metricInputCard.visibility = if (binding.metricRadioButton.isChecked) View.VISIBLE else View.GONE
-            binding.imperialInputCard.visibility = if (binding.imperialRadioButton.isChecked) View.VISIBLE else View.GONE
-            clearUi()
-        }
+    private fun setupUnitToggle() = binding.unitRadioGroup.setOnCheckedChangeListener { _, _ ->
+        binding.metricInputCard.visibility =
+            if (binding.metricRadioButton.isChecked) View.VISIBLE else View.GONE
+        binding.imperialInputCard.visibility =
+            if (binding.imperialRadioButton.isChecked) View.VISIBLE else View.GONE
+        clearUi()
     }
 
-    private fun setupCalculateButton() {
-        binding.calculateButton.setOnClickListener {
-            // ✅ Read the new age and gender inputs from the UI
-            val age = binding.ageEditText.text.toString()
-            val selectedGender = when (binding.genderRadioGroup.checkedRadioButtonId) {
-                R.id.maleRadioButton -> Gender.MALE
-                R.id.femaleRadioButton -> Gender.FEMALE
-                else -> null
-            }
-
-            // Send all inputs to the ViewModel for calculation
-            if (binding.metricRadioButton.isChecked) {
-                viewModel.calculate(
-                    isMetric = true,
-                    ageStr = age,
-                    gender = selectedGender,
-                    weightStr = binding.weightEditText.text.toString(),
-                    heightStr = binding.heightEditText.text.toString()
-                )
-            } else {
-                viewModel.calculate(
-                    isMetric = false,
-                    ageStr = age,
-                    gender = selectedGender,
-                    weightStr = binding.weightImperialEditText.text.toString(),
-                    heightStr = binding.feetEditText.text.toString(),
-                    inchesStr = binding.inchesEditText.text.toString()
-                )
-            }
-        }
-    }
-
-    private fun setupSaveButton() {
-        binding.saveButton.setOnClickListener {
-            viewModel.saveCurrentResult()
-            Toast.makeText(this, "Result saved!", Toast.LENGTH_SHORT).show()
-            it.isEnabled = false // Disable button after saving
-        }
-    }
-
-    private fun setupHistoryButton() {
-        binding.historyButton.setOnClickListener {
-            val intent = Intent(this, HistoryActivity::class.java)
-            startActivity(intent)
-        }
-    }
-
-    private fun displayResults(result: BmiResult) {
-        binding.resultCard.visibility = View.VISIBLE
-        binding.saveButton.isEnabled = true // Re-enable on new result
-        ObjectAnimator.ofFloat(binding.resultCard, "alpha", 0f, 1f).apply {
-            duration = 500
-            start()
+    private fun setupCalculateButton() = binding.calculateButton.setOnClickListener {
+        val age = binding.ageEditText.text.toString()
+        val gender = when (binding.genderRadioGroup.checkedRadioButtonId) {
+            R.id.maleRadioButton -> Gender.MALE
+            R.id.femaleRadioButton -> Gender.FEMALE
+            else -> null
         }
 
-        val color = ContextCompat.getColor(this, result.colorRes)
-
-        // ✅ Get strings from resources
-        binding.resultTextView.text = getString(R.string.bmi_result_format, result.bmiValue)
-        binding.categoryTextView.text = getString(result.categoryResId)
-        binding.categoryTextView.setTextColor(color)
-        binding.tipTextView.text = getString(result.tipResId)
-        binding.classificationTextView.text = getString(result.descriptionResId)
-
-        // ✅ Format the healthy range string here in the UI layer
         if (binding.metricRadioButton.isChecked) {
-            binding.rangeTextView.text = getString(R.string.healthy_range_kg, result.minHealthyKg, result.maxHealthyKg)
+            viewModel.calculate(
+                isMetric = true,
+                ageStr = age,
+                gender = gender,
+                weightStr = binding.weightEditText.text.toString(),
+                heightStr = binding.heightEditText.text.toString()
+            )
         } else {
-            binding.rangeTextView.text = getString(R.string.healthy_range_lbs,
-                viewModel.kilogramsToPounds(result.minHealthyKg),
-                viewModel.kilogramsToPounds(result.maxHealthyKg)
+            viewModel.calculate(
+                isMetric = false,
+                ageStr = age,
+                gender = gender,
+                weightStr = binding.weightImperialEditText.text.toString(),
+                heightStr = binding.feetEditText.text.toString(),
+                inchesStr = binding.inchesEditText.text.toString()
             )
         }
     }
 
+    private fun setupSaveButton() = binding.saveButton.setOnClickListener {
+        viewModel.saveCurrentResult()
+        Toast.makeText(this, R.string.result_saved, Toast.LENGTH_SHORT).show()
+        it.isEnabled = false
+    }
+
+    private fun setupHistoryButton() = binding.historyButton.setOnClickListener {
+        startActivity(Intent(this, HistoryActivity::class.java))
+    }
+
+    private fun displayResults(result: BmiResult) {
+        binding.resultCard.apply {
+            visibility = View.VISIBLE
+            ObjectAnimator.ofFloat(this, "alpha", 0f, 1f).apply {
+                duration = 500
+                start()
+            }
+        }
+
+        binding.saveButton.isEnabled = true
+
+        val color = ContextCompat.getColor(this, result.colorRes)
+        binding.resultTextView.text = getString(R.string.bmi_result_format, result.bmiValue)
+        binding.categoryTextView.apply {
+            text = getString(result.categoryResId)
+            setTextColor(color)
+        }
+        binding.tipTextView.text = getString(result.tipResId)
+        binding.classificationTextView.apply {
+            text = getString(result.descriptionResId)
+            setTextColor(color)
+        }
+
+        binding.rangeTextView.text = if (binding.metricRadioButton.isChecked) {
+            getString(R.string.healthy_range_kg, result.minHealthyKg, result.maxHealthyKg)
+        } else {
+            getString(
+                R.string.healthy_range_lbs,
+                viewModel.kilogramsToPounds(result.minHealthyKg),
+                viewModel.kilogramsToPounds(result.maxHealthyKg)
+            )
+        }
+
+        updateGauge(result.bmiValue, color)
+    }
+
+    private fun setupGaugeChart() = binding.gaugeChart.apply {
+        setUsePercentValues(false)
+        description.isEnabled = false
+        legend.isEnabled = false
+        isDrawHoleEnabled = true
+        setHoleColor(android.graphics.Color.TRANSPARENT)
+        setTransparentCircleAlpha(0)
+        holeRadius = 65f
+        transparentCircleRadius = 70f
+        setDrawCenterText(true)
+        centerText = "BMI"
+        setCenterTextSize(24f)
+        maxAngle = 180f
+        rotationAngle = 180f
+        setTouchEnabled(false)
+
+        val entries = listOf(
+            PieEntry(1f),//category_severe_thinness
+            PieEntry(1f),//category_moderate_thinness
+            PieEntry(8.5f), //category_mild_thinness
+            PieEntry(6.5f), // category_normal
+            PieEntry(5f),   // category_overweight
+            PieEntry(5f),   // category_obese1
+            PieEntry(5f),   // category_obese2
+            PieEntry(5f),   // category_obese3
+
+        )
+
+        val dataSet = PieDataSet(entries, "BMI Categories").apply {
+            setDrawValues(false)
+            colors = listOf(
+                ContextCompat.getColor(this@MainActivity, R.color.severeThinness),
+                ContextCompat.getColor(this@MainActivity, R.color.moderateThinness),
+                ContextCompat.getColor(this@MainActivity, R.color.mildThinness),
+                ContextCompat.getColor(this@MainActivity, R.color.normal),
+                ContextCompat.getColor(this@MainActivity, R.color.overweight),
+                ContextCompat.getColor(this@MainActivity, R.color.obese1),
+                ContextCompat.getColor(this@MainActivity, R.color.obese2),
+                ContextCompat.getColor(this@MainActivity, R.color.obese3)
+            )
+            sliceSpace = 2f
+        }
+
+        data = PieData(dataSet)
+        invalidate()
+    }
+
+    private fun updateGauge(bmiValue: Float, color: Int) = binding.gaugeChart.apply {
+        centerText = "%.1f".format(bmiValue)
+        setCenterTextColor(color)
+        animateY(1000)
+    }
 
     private fun clearUi() {
-        binding.weightEditText.text = null
-        binding.heightEditText.text = null
-        binding.feetEditText.text = null
-        binding.inchesEditText.text = null
-        binding.weightImperialEditText.text = null
-        binding.ageEditText.text = null
-        binding.genderRadioGroup.clearCheck()
+        with(binding) {
+            weightEditText.text = null
+            heightEditText.text = null
+            feetEditText.text = null
+            inchesEditText.text = null
+            weightImperialEditText.text = null
+            ageEditText.text = null
+            genderRadioGroup.clearCheck()
+        }
         viewModel.clearResult()
     }
 
-    // Functions that only interact with the UI remain in the Activity
-    private fun setupReferenceButton() {
-        binding.referenceButton.setOnClickListener {
-            showClassificationReference()
-        }
-    }
 
-    private fun showClassificationReference() {
+    private fun showLegendDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_bmi_legend, null)
+        val legendLayout = dialogView.findViewById<ViewGroup>(R.id.legendContainer)
+
+        val categories = listOf(
+            R.string.category_severe_thinness,
+            R.string.category_moderate_thinness,
+            R.string.category_mild_thinness,
+            R.string.category_normal,
+            R.string.category_overweight,
+            R.string.category_obese1,
+            R.string.category_obese2,
+            R.string.category_obese3
+        )
+
+        val colors = listOf(
+            R.color.severeThinness,
+            R.color.moderateThinness,
+            R.color.mildThinness,
+            R.color.normal,
+            R.color.overweight,
+            R.color.obese1,
+            R.color.obese2,
+            R.color.obese3
+        )
+
+        categories.forEachIndexed { index, categoryRes ->
+            val color = ContextCompat.getColor(this, colors[index])
+            val label = getString(categoryRes)
+
+            val legendItem = LayoutInflater.from(this).inflate(R.layout.legend_item, legendLayout, false)
+            val colorCircle = legendItem.findViewById<View>(R.id.colorCircle)
+            val labelText = legendItem.findViewById<TextView>(R.id.labelText)
+
+            colorCircle.background.setTint(color)
+            labelText.text = label
+
+            legendLayout.addView(legendItem)
+        }
+
         MaterialAlertDialogBuilder(this)
-            // ✅ Get strings from resources
-            .setTitle(getString(R.string.dialog_title))
-            .setBackground(ContextCompat.getDrawable(this,R.drawable.dialog_background))
-            .setMessage(getString(R.string.dialog_message))
-            .setPositiveButton(getString(R.string.dialog_ok_button), null)
+            .setTitle(R.string.dialog_title) // e.g., "Classification Reference"
+            .setView(dialogView)
+            .setPositiveButton(R.string.dialog_ok_button, null) // e.g., "OK"
             .show()
     }
+
 
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

@@ -1,7 +1,8 @@
-package com.library.bmi.data.repository
+package com.library.bmi.data.factory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.library.bmi.data.repository.BmiRepository
 import com.library.bmi.ui.history.HistoryViewModel
 
 /**

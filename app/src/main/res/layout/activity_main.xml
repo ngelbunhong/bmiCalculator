@@ -220,7 +220,7 @@
                                 android:id="@+id/inchesEditText"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="number" />
+                                android:inputType="numberDecimal" />
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
                 </LinearLayout>
@@ -268,10 +268,17 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
+                <!-- ✅ Replaced GaugeChart with PieChart -->
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/gaugeChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp" />
+
                 <TextView
                     android:id="@+id/resultTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="-20dp"
                     android:textAlignment="center"
                     android:textAppearance="?attr/textAppearanceHeadlineMedium"
                     tools:text="BMI: 24.5" />
@@ -311,6 +318,7 @@
                     android:layout_marginTop="16dp"
                     android:textAlignment="center"
                     android:textAppearance="?attr/textAppearanceBody2"
+                    android:textColor="@color/normal"
                     android:textStyle="italic"
                     tools:text="Tip: You're doing great! Maintain your healthy habits." />
 

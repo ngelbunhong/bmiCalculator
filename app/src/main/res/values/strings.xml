@@ -50,5 +50,12 @@
 
     <string name="history_title">History</string>
     <string name="no_history_message">No history yet. Save a result to see it here.</string>
-    <string name="delete_all">Delete All</string>
+    <string name="dialog_delete_all_title">Delete All</string>
+
+    <string name="record_deleted">Record Deleted</string>
+    <string name="undo">Undo</string>
+    <string name="cancel">Cancel</string>
+    <string name="dialog_delete_all_message">Are you sure you want to delete all entries? This action cannot be undone.</string>
+    <string name="delete">Delete</string>
+    <string name="result_saved">Result saved</string>
 </resources>

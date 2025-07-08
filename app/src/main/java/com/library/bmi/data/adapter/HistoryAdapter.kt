@@ -4,9 +4,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.library.bmi.R
 import com.library.bmi.data.database.BmiRecord
 import java.text.SimpleDateFormat
@@ -24,30 +26,87 @@ class HistoryAdapter : ListAdapter<BmiRecord, HistoryAdapter.HistoryViewHolder>(
         holder.bind(getItem(position))
     }
 
-    /**
-     * ✅ Helper function to get the BmiRecord at a given position.
-     */
     fun getRecordAt(position: Int): BmiRecord {
         return getItem(position)
     }
 
     class HistoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val cardView: MaterialCardView = itemView as MaterialCardView
         private val bmiTextView: TextView = itemView.findViewById(R.id.bmiValueTextView)
         private val categoryTextView: TextView = itemView.findViewById(R.id.categoryTextView)
         private val dateTextView: TextView = itemView.findViewById(R.id.dateTextView)
-
         private val detailsTextView: TextView = itemView.findViewById(R.id.detailsTextView)
-
         private val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
 
         fun bind(record: BmiRecord) {
-            bmiTextView.text = "BMI: %.1f".format(record.bmi)
+            bmiTextView.text = itemView.context.getString(R.string.bmi_result_format, record.bmi)
             categoryTextView.text = record.category
             dateTextView.text = dateFormat.format(record.timestamp)
-            // ✅ Set the combined details text
             val details = "Age: ${record.age}, ${record.gender}\n" +
                     "Weight: ${record.weight}, Height: ${record.height}"
             detailsTextView.text = details
+
+            // ✅ START: Logic to set card and text color
+            val (cardColorRes, textColorRes) = getBmiColors(record.bmi)
+
+            val cardColor = ContextCompat.getColor(itemView.context, cardColorRes)
+            val textColor = ContextCompat.getColor(itemView.context, textColorRes)
+
+            cardView.setCardBackgroundColor(cardColor)
+
+            // Set all text views inside the card to the appropriate color for readability
+            bmiTextView.setTextColor(textColor)
+            categoryTextView.setTextColor(textColor)
+            dateTextView.setTextColor(textColor)
+            detailsTextView.setTextColor(textColor)
+            // ✅ END: Logic to set card and text color
+        }
+
+        /**
+         * Determines the background color for the card and the appropriate text color
+         * for readability based on the BMI value.
+         *
+         * @return A Pair containing the resource ID for the card color and the text color.
+         */
+        private fun getBmiColors(bmi: Float): Pair<Int, Int> {
+            val cardColor: Int
+            val textColor: Int
+
+            when {
+                bmi < 16f -> {
+                    cardColor = R.color.severeThinness
+                    textColor = R.color.white
+                }
+                bmi < 17f -> {
+                    cardColor = R.color.moderateThinness
+                    textColor = R.color.white
+                }
+                bmi < 18.5f -> {
+                    cardColor = R.color.mildThinness
+                    textColor = R.color.white
+                }
+                bmi < 25f -> {
+                    cardColor = R.color.normal
+                    textColor = R.color.white
+                }
+                bmi < 30f -> {
+                    cardColor = R.color.overweight
+                    textColor = R.color.black
+                }
+                bmi < 35f -> {
+                    cardColor = R.color.obese1
+                    textColor = R.color.white
+                }
+                bmi < 40f -> {
+                    cardColor = R.color.obese2
+                    textColor = R.color.white
+                }
+                else -> {
+                    cardColor = R.color.obese3
+                    textColor = R.color.white
+                }
+            }
+            return Pair(cardColor, textColor)
         }
     }
 }

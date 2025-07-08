@@ -68,18 +68,32 @@ class BmiViewModel(
                 _errorEvent.value = R.string.error_invalid_numbers
                 return
             }
-            if (isMetric) {
-                // ... (validation logic is the same)
-                processMetric(weightStr.toFloat(), heightStr.toFloat())
-            } else {
-                // ... (validation logic is the same)
-                processImperial(weightStr.toFloat(), heightStr.toInt(), inchesStr.toInt())
-            }
             // ✅ Store the inputs when a calculation is made
             this.isMetricMode = isMetric
             this.lastAge = ageStr
             this.lastGender = gender
             this.lastInputs = Triple(weightStr, heightStr, inchesStr)
+            if (isMetric) {
+                val weightKg = weightStr.toFloat()
+                val heightCm = heightStr.toFloat()
+                if (weightKg <= 0 || heightCm <= 0) {
+                    _errorEvent.value = R.string.error_positive_values
+                    return
+                }
+                processMetric(weightKg, heightCm)
+            } else {
+                // ✅ START: Corrected parsing logic
+                val weightLbs = weightStr.toFloat()
+                val feet = heightStr.toInt()       // Parse feet as Int
+                val inches = inchesStr.toFloat()   // Parse inches as Float
+                if (weightLbs <= 0 || feet <= 0 || inches < 0) {
+                    _errorEvent.value = R.string.error_positive_values
+                    return
+                }
+                processImperial(weightLbs, feet, inches)
+                // ✅ END: Corrected parsing logic
+            }
+
         } catch (e: NumberFormatException) {
             // ✅ Send the resource ID for the error.
             _errorEvent.value = R.string.error_invalid_numbers
@@ -121,8 +135,9 @@ class BmiViewModel(
         updateResult(bmi, heightM)
     }
 
-    private fun processImperial(weightLbs: Float, feet: Int, inches: Int) {
-        val totalInches = (feet * 12 + inches).toFloat()
+    // ✅ Updated the function signature to match the new types
+    private fun processImperial(weightLbs: Float, feet: Int, inches: Float) {
+        val totalInches = (feet * 12) + inches
         val bmi = IMPERIAL_BMI_FACTOR * (weightLbs / (totalInches * totalInches))
         val heightM = totalInches * INCHES_TO_METERS
         updateResult(bmi, heightM)

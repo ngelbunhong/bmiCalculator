@@ -7,8 +7,19 @@
     <color name="background">#FFF5F5F5</color>
     <color name="surface">#FFFFFFFF</color>
     <color name="error">#FFB00020</color>
-    <color name="primaryText">#DE000000</color>
     <color name="secondaryText">#8A000000</color>
+
+    <!-- Standard Material Theme Colors (can be customized) -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Primary Text Color (for titles) -->
+    <color name="primaryText">#212121</color>
 
     <!-- BMI Colors -->
     <color name="severeThinness">#2196F3</color>       <!-- Blue -->
@@ -19,5 +30,11 @@
     <color name="obese1">#FF9800</color>               <!-- Orange -->
     <color name="obese2">#FF5722</color>               <!-- Deep Orange -->
     <color name="obese3">#F44336</color>               <!-- Red -->
+
+
+    <!-- Material 3 Light Theme Colors -->
+    <color name="md_theme_primary">#6750A4</color>
+    <color name="md_theme_onSurface">#1C1B1F</color>
+    <color name="md_theme_primaryContainer">#EADDFF</color>
 
 </resources>
