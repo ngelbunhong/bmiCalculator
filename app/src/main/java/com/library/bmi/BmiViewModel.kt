@@ -1,10 +1,17 @@
 package com.library.bmi
 
+import android.app.Application
 import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.library.bmi.data.database.AppDatabase
+import com.library.bmi.data.database.BmiRecord
+import com.library.bmi.data.repository.BmiRepository
+import kotlinx.coroutines.launch
+import java.util.Date
 
 // ✅ BmiResult now holds resource IDs and raw data for formatting.
 data class BmiResult(
@@ -20,7 +27,10 @@ data class BmiResult(
 // ✅ Enum for type safety
 enum class Gender { MALE, FEMALE }
 
-class BmiViewModel : ViewModel() {
+class BmiViewModel(
+    private val application: Application,
+    private val repository: BmiRepository
+) : ViewModel() {
 
     companion object {
         private const val BMI_NORMAL_LOWER_BOUND = 18.5f
@@ -30,6 +40,12 @@ class BmiViewModel : ViewModel() {
         private const val INCHES_TO_METERS = 0.0254f
     }
 
+
+    // This will temporarily hold the inputs for saving.
+    private var lastInputs: Triple<String, String, String>? = null
+    private var lastGender: Gender? = null
+    private var lastAge: String? = null
+    private var isMetricMode: Boolean = true
     private val _bmiResult = MutableLiveData<BmiResult?>()
     val bmiResult: LiveData<BmiResult?> = _bmiResult
 
@@ -37,12 +53,14 @@ class BmiViewModel : ViewModel() {
     private val _errorEvent = MutableLiveData<Int>()
     val errorEvent: LiveData<Int> = _errorEvent
 
-    fun calculate(    isMetric: Boolean,
-                      ageStr: String,
-                      gender: Gender?,
-                      weightStr: String,
-                      heightStr: String,
-                      inchesStr: String = "") {
+    fun calculate(
+        isMetric: Boolean,
+        ageStr: String,
+        gender: Gender?,
+        weightStr: String,
+        heightStr: String,
+        inchesStr: String = ""
+    ) {
         try {
             val age = ageStr.toInt()
             // Basic validation for new fields
@@ -57,9 +75,43 @@ class BmiViewModel : ViewModel() {
                 // ... (validation logic is the same)
                 processImperial(weightStr.toFloat(), heightStr.toInt(), inchesStr.toInt())
             }
+            // ✅ Store the inputs when a calculation is made
+            this.isMetricMode = isMetric
+            this.lastAge = ageStr
+            this.lastGender = gender
+            this.lastInputs = Triple(weightStr, heightStr, inchesStr)
         } catch (e: NumberFormatException) {
             // ✅ Send the resource ID for the error.
             _errorEvent.value = R.string.error_invalid_numbers
+        }
+    }
+
+    fun saveCurrentResult() {
+        val result = bmiResult.value ?: return // Don't save if there's no result
+        val age = lastAge?.toIntOrNull() ?: return
+        val gender = lastGender ?: return
+        val (weight, height, inches) = lastInputs ?: return
+        val weightText: String
+        val heightText: String
+
+        if (isMetricMode) {
+            weightText = "$weight kg"
+            heightText = "$height cm"
+        } else {
+            weightText = "$weight lbs"
+            heightText = "$height' $inches\""
+        }
+
+
+        // Use a coroutine to call the suspend function in the repository
+        viewModelScope.launch {
+            val category = application.getString(result.categoryResId)
+            repository.insert(
+                result.bmiValue, category, age = age,
+                gender = gender.name.replaceFirstChar { it.titlecase() }, // "MALE" -> "Male"
+                weight = weightText,
+                height = heightText
+            )
         }
     }
 

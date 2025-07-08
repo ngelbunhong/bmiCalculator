@@ -9,12 +9,12 @@
     <string name="healthy_range_lbs">Healthy range: %.1f - %.1f lbs</string>
 
     <string name="category_severe_thinness">Severe Thinness (&lt;16)</string>
-    <string name="category_moderate_thinness">Moderate Thinness (16-17)</string>
-    <string name="category_mild_thinness">Mild Thinness (17-18.5)</string>
-    <string name="category_normal">Normal (18.5-25)</string>
-    <string name="category_overweight">Overweight (25-30)</string>
-    <string name="category_obese1">Obese Class I (30-35)</string>
-    <string name="category_obese2">Obese Class II (35-40)</string>
+    <string name="category_moderate_thinness">Moderate Thinness (16–17)</string>
+    <string name="category_mild_thinness">Mild Thinness (17–18.5)</string>
+    <string name="category_normal">Normal (18.5–25)</string>
+    <string name="category_overweight">Overweight (25–30)</string>
+    <string name="category_obese1">Obese Class I (30–35)</string>
+    <string name="category_obese2">Obese Class II (35–40)</string>
     <string name="category_obese3">Obese Class III (&gt;40)</string>
 
     <string name="tip_severe_thinness">Your health is the priority. Please consult with a healthcare professional for guidance.</string>
@@ -47,4 +47,8 @@
         Obese Class II: 35 - 40\n
         Obese Class III: &gt; 40
     </string>
+
+    <string name="history_title">History</string>
+    <string name="no_history_message">No history yet. Save a result to see it here.</string>
+    <string name="delete_all">Delete All</string>
 </resources>

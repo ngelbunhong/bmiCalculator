@@ -1,18 +1,26 @@
 package com.library.bmi
 
 import android.animation.ObjectAnimator
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.library.bmi.data.factory.BmiViewModelFactory
 import com.library.bmi.databinding.ActivityMainBinding
+import com.library.bmi.ui.history.HistoryActivity
 
 class MainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val viewModel: BmiViewModel by viewModels()
+    private val viewModel: BmiViewModel by viewModels {
+        BmiViewModelFactory(
+            application,
+            (application as BmiApplication).repository
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +32,8 @@ class MainActivity : BaseActivity() {
         setupCalculateButton()
         setupReferenceButton()
         observeViewModel()
+        setupSaveButton()
+        setupHistoryButton()
     }
 
     // Observe the LiveData from the ViewModel
@@ -83,8 +93,24 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private fun setupSaveButton() {
+        binding.saveButton.setOnClickListener {
+            viewModel.saveCurrentResult()
+            Toast.makeText(this, "Result saved!", Toast.LENGTH_SHORT).show()
+            it.isEnabled = false // Disable button after saving
+        }
+    }
+
+    private fun setupHistoryButton() {
+        binding.historyButton.setOnClickListener {
+            val intent = Intent(this, HistoryActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
     private fun displayResults(result: BmiResult) {
         binding.resultCard.visibility = View.VISIBLE
+        binding.saveButton.isEnabled = true // Re-enable on new result
         ObjectAnimator.ofFloat(binding.resultCard, "alpha", 0f, 1f).apply {
             duration = 500
             start()

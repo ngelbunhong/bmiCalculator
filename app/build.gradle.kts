@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.devtools.ksp")
+
 }
 
 android {
@@ -55,9 +57,15 @@ dependencies {
     implementation(libs.mpandroidchart) // Add this line
 
     // For ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.1")
     // For the by viewModels() delegate
-    implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.activity:activity-ktx:1.10.1")
+
+
+    // Add these to your dependencies block
+    implementation("androidx.room:room-runtime:2.7.2")
+    ksp("androidx.room:room-compiler:2.7.2") // Use kapt for annotation processing
+    implementation("androidx.room:room-ktx:2.7.2") // For coroutine support
 
 
 }

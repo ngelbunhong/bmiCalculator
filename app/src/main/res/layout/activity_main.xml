@@ -71,7 +71,7 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Age">
+                    android:hint="Age (2-120)">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/ageEditText"
@@ -179,7 +179,7 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Weight (lbs)">
+                        android:hint="Pounds (lbs)">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/weightImperialEditText"
@@ -239,6 +239,16 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/inputContainer" />
+
+        <Button
+            android:id="@+id/historyButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="History"
+            app:icon="@drawable/ic_history"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/resultCard"
@@ -303,6 +313,15 @@
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textStyle="italic"
                     tools:text="Tip: You're doing great! Maintain your healthy habits." />
+
+                <Button
+                    android:id="@+id/saveButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:text="Save Result" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
