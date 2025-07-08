@@ -4,10 +4,6 @@
     <string name="error_positive_values">Values must be positive</string>
     <string name="error_invalid_numbers">Please enter valid numbers</string>
 
-    <string name="bmi_result_format">BMI: %.1f</string>
-    <string name="healthy_range_kg">Healthy range: %.1f - %.1f kg</string>
-    <string name="healthy_range_lbs">Healthy range: %.1f - %.1f lbs</string>
-
     <string name="category_severe_thinness">Severe Thinness (&lt;16)</string>
     <string name="category_moderate_thinness">Moderate Thinness (16–17)</string>
     <string name="category_mild_thinness">Mild Thinness (17–18.5)</string>
@@ -58,4 +54,11 @@
     <string name="dialog_delete_all_message">Are you sure you want to delete all entries? This action cannot be undone.</string>
     <string name="delete">Delete</string>
     <string name="result_saved">Result saved</string>
+
+    <string name="healthy_range_kg">Healthy range: %1$s - %2$s kg</string>
+    <string name="healthy_range_lbs">Healthy range: %1$s - %2$s lbs</string>
+    <string name="bmi_result_format">BMI: %.1f</string>
+    <string name="ideal_weight_range_format">Ideal Weight Range: %1$s - %2$s kg</string> <!-- optional if used -->
+
+
 </resources>

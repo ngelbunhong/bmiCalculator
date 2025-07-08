@@ -58,6 +58,7 @@ class MainActivity : BaseActivity() {
         viewModel.errorEvent.observe(this) {
             showError(getString(it))
         }
+
     }
 
     private fun setupUnitToggle() = binding.unitRadioGroup.setOnCheckedChangeListener { _, _ ->
@@ -129,15 +130,16 @@ class MainActivity : BaseActivity() {
             setTextColor(color)
         }
 
+        val min = String.format("%.1f", result.minHealthyKg)
+        val max = String.format("%.1f", result.maxHealthyKg)
         binding.rangeTextView.text = if (binding.metricRadioButton.isChecked) {
-            getString(R.string.healthy_range_kg, result.minHealthyKg, result.maxHealthyKg)
+            getString(R.string.healthy_range_kg, min, max)
         } else {
-            getString(
-                R.string.healthy_range_lbs,
-                viewModel.kilogramsToPounds(result.minHealthyKg),
-                viewModel.kilogramsToPounds(result.maxHealthyKg)
-            )
+            val minLbs = String.format("%.1f", viewModel.kilogramsToPounds(result.minHealthyKg))
+            val maxLbs = String.format("%.1f", viewModel.kilogramsToPounds(result.maxHealthyKg))
+            getString(R.string.healthy_range_lbs, minLbs, maxLbs)
         }
+
 
         updateGauge(result.bmiValue, color)
     }
@@ -161,7 +163,7 @@ class MainActivity : BaseActivity() {
         val entries = listOf(
             PieEntry(1f),//category_severe_thinness
             PieEntry(1f),//category_moderate_thinness
-            PieEntry(8.5f), //category_mild_thinness
+            PieEntry(1.5f), //category_mild_thinness
             PieEntry(6.5f), // category_normal
             PieEntry(5f),   // category_overweight
             PieEntry(5f),   // category_obese1
@@ -204,10 +206,10 @@ class MainActivity : BaseActivity() {
             weightImperialEditText.text = null
             ageEditText.text = null
             genderRadioGroup.clearCheck()
+            saveButton.isEnabled = false
         }
         viewModel.clearResult()
     }
-
 
     private fun showLegendDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_bmi_legend, null)

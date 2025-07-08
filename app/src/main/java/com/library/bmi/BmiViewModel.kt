@@ -7,24 +7,20 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.library.bmi.data.database.AppDatabase
-import com.library.bmi.data.database.BmiRecord
 import com.library.bmi.data.repository.BmiRepository
 import kotlinx.coroutines.launch
-import java.util.Date
 
-// ✅ BmiResult now holds resource IDs and raw data for formatting.
+// Data class holding BMI calculation result and related info
 data class BmiResult(
     val bmiValue: Float,
     @StringRes val categoryResId: Int,
     @ColorRes val colorRes: Int,
-    val minHealthyKg: Float,
-    val maxHealthyKg: Float,
+    val minHealthyKg: Float,  // Ideal weight lower bound (Devine)
+    val maxHealthyKg: Float,  // Ideal weight upper bound (Devine)
     @StringRes val descriptionResId: Int,
     @StringRes val tipResId: Int
 )
 
-// ✅ Enum for type safety
 enum class Gender { MALE, FEMALE }
 
 class BmiViewModel(
@@ -40,16 +36,14 @@ class BmiViewModel(
         private const val INCHES_TO_METERS = 0.0254f
     }
 
-
-    // This will temporarily hold the inputs for saving.
     private var lastInputs: Triple<String, String, String>? = null
     private var lastGender: Gender? = null
     private var lastAge: String? = null
     private var isMetricMode: Boolean = true
+
     private val _bmiResult = MutableLiveData<BmiResult?>()
     val bmiResult: LiveData<BmiResult?> = _bmiResult
 
-    // ✅ Error event now sends a String Resource ID.
     private val _errorEvent = MutableLiveData<Int>()
     val errorEvent: LiveData<Int> = _errorEvent
 
@@ -63,16 +57,16 @@ class BmiViewModel(
     ) {
         try {
             val age = ageStr.toInt()
-            // Basic validation for new fields
             if (age <= 0 || gender == null) {
                 _errorEvent.value = R.string.error_invalid_numbers
                 return
             }
-            // ✅ Store the inputs when a calculation is made
+
             this.isMetricMode = isMetric
             this.lastAge = ageStr
             this.lastGender = gender
             this.lastInputs = Triple(weightStr, heightStr, inchesStr)
+
             if (isMetric) {
                 val weightKg = weightStr.toFloat()
                 val heightCm = heightStr.toFloat()
@@ -82,26 +76,23 @@ class BmiViewModel(
                 }
                 processMetric(weightKg, heightCm)
             } else {
-                // ✅ START: Corrected parsing logic
                 val weightLbs = weightStr.toFloat()
-                val feet = heightStr.toInt()       // Parse feet as Int
-                val inches = inchesStr.toFloat()   // Parse inches as Float
+                val feet = heightStr.toInt()
+                val inches = inchesStr.toFloat()
                 if (weightLbs <= 0 || feet <= 0 || inches < 0) {
                     _errorEvent.value = R.string.error_positive_values
                     return
                 }
                 processImperial(weightLbs, feet, inches)
-                // ✅ END: Corrected parsing logic
             }
 
         } catch (e: NumberFormatException) {
-            // ✅ Send the resource ID for the error.
             _errorEvent.value = R.string.error_invalid_numbers
         }
     }
 
     fun saveCurrentResult() {
-        val result = bmiResult.value ?: return // Don't save if there's no result
+        val result = bmiResult.value ?: return
         val age = lastAge?.toIntOrNull() ?: return
         val gender = lastGender ?: return
         val (weight, height, inches) = lastInputs ?: return
@@ -116,13 +107,13 @@ class BmiViewModel(
             heightText = "$height' $inches\""
         }
 
-
-        // Use a coroutine to call the suspend function in the repository
         viewModelScope.launch {
             val category = application.getString(result.categoryResId)
             repository.insert(
-                result.bmiValue, category, age = age,
-                gender = gender.name.replaceFirstChar { it.titlecase() }, // "MALE" -> "Male"
+                result.bmiValue,
+                category,
+                age = age,
+                gender = gender.name.replaceFirstChar { it.titlecase() },
                 weight = weightText,
                 height = heightText
             )
@@ -135,9 +126,8 @@ class BmiViewModel(
         updateResult(bmi, heightM)
     }
 
-    // ✅ Updated the function signature to match the new types
     private fun processImperial(weightLbs: Float, feet: Int, inches: Float) {
-        val totalInches = (feet * 12) + inches
+        val totalInches = feet * 12 + inches
         val bmi = IMPERIAL_BMI_FACTOR * (weightLbs / (totalInches * totalInches))
         val heightM = totalInches * INCHES_TO_METERS
         updateResult(bmi, heightM)
@@ -145,22 +135,21 @@ class BmiViewModel(
 
     private fun updateResult(bmi: Float, heightM: Float) {
         val (categoryResId, colorRes) = getBmiCategory(bmi)
-        val minHealthyKg = BMI_NORMAL_LOWER_BOUND * (heightM * heightM)
-        val maxHealthyKg = BMI_NORMAL_UPPER_BOUND * (heightM * heightM)
+
+        // Calculate ideal weight range using Devine formula, update LiveData _idealWeightRange
+        val (minHealthyKg, maxHealthyKg) = calculateIdealWeight(heightM, lastGender ?: Gender.MALE)
 
         _bmiResult.value = BmiResult(
             bmiValue = bmi,
             categoryResId = categoryResId,
             colorRes = colorRes,
             minHealthyKg = minHealthyKg,
-            descriptionResId = getClassificationDescription(bmi),
             maxHealthyKg = maxHealthyKg,
+            descriptionResId = getClassificationDescription(bmi),
             tipResId = getPersonalizedTip(bmi)
-
         )
     }
 
-    // ✅ New function to select a tip based on BMI
     @StringRes
     private fun getPersonalizedTip(bmi: Float): Int {
         return when {
@@ -179,7 +168,6 @@ class BmiViewModel(
         _bmiResult.value = null
     }
 
-    // ✅ Now returns Pair<StringRes, ColorRes>
     private fun getBmiCategory(bmi: Float): Pair<Int, Int> {
         return when {
             bmi < 16f -> Pair(R.string.category_severe_thinness, R.color.severeThinness)
@@ -193,7 +181,6 @@ class BmiViewModel(
         }
     }
 
-    // ✅ Now returns @StringRes Int
     @StringRes
     private fun getClassificationDescription(bmi: Float): Int {
         return when {
@@ -209,4 +196,19 @@ class BmiViewModel(
     }
 
     fun kilogramsToPounds(kg: Float): Float = kg * LBS_TO_KG_FACTOR
+
+    /**
+     * Calculate ideal weight range using Devine formula (kg)
+     * Updates LiveData _idealWeightRange with ±10% range
+     */
+    fun calculateIdealWeight(heightM: Float, gender: Gender): Pair<Float, Float> {
+        val heightInInches = heightM / 0.0254f
+        val base = if (gender == Gender.MALE) 50f else 45.5f
+        val idealWeightKg = base + 2.3f * (heightInInches - 60)
+
+        val lowerBound = idealWeightKg * 0.9f
+        val upperBound = idealWeightKg * 1.1f
+
+        return Pair(lowerBound, upperBound)
+    }
 }
