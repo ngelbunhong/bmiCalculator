@@ -1,15 +1,23 @@
 package com.library.bmi.ui.history
 
+import android.content.ContentValues
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.components.XAxis
@@ -25,6 +33,7 @@ import com.library.bmi.data.adapter.HistoryAdapter
 import com.library.bmi.data.database.BmiRecord
 import com.library.bmi.data.factory.HistoryViewModelFactory
 import com.library.bmi.databinding.ActivityHistoryBinding
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.floor
@@ -177,7 +186,11 @@ class HistoryActivity : AppCompatActivity() {
                 val record = historyAdapter.getRecordAt(position)
                 viewModel.delete(record)
 
-                Snackbar.make(binding.root, getString(R.string.record_deleted), Snackbar.LENGTH_LONG)
+                Snackbar.make(
+                    binding.root,
+                    getString(R.string.record_deleted),
+                    Snackbar.LENGTH_LONG
+                )
                     .setAction(getString(R.string.undo)) {
                         viewModel.insert(record)
                     }.show()
@@ -192,7 +205,15 @@ class HistoryActivity : AppCompatActivity() {
                 actionState: Int,
                 isCurrentlyActive: Boolean
             ) {
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                super.onChildDraw(
+                    c,
+                    recyclerView,
+                    viewHolder,
+                    dX,
+                    dY,
+                    actionState,
+                    isCurrentlyActive
+                )
 
                 val itemView = viewHolder.itemView
                 val backgroundCornerOffset = 20
@@ -206,14 +227,26 @@ class HistoryActivity : AppCompatActivity() {
                         val iconLeft = itemView.left + iconMargin
                         val iconRight = iconLeft + deleteIcon.intrinsicWidth
                         deleteIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
-                        backgroundColor.setBounds(itemView.left, itemView.top, itemView.left + dX.toInt() + backgroundCornerOffset, itemView.bottom)
+                        backgroundColor.setBounds(
+                            itemView.left,
+                            itemView.top,
+                            itemView.left + dX.toInt() + backgroundCornerOffset,
+                            itemView.bottom
+                        )
                     }
+
                     dX < 0 -> {
                         val iconRight = itemView.right - iconMargin
                         val iconLeft = iconRight - deleteIcon.intrinsicWidth
                         deleteIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
-                        backgroundColor.setBounds(itemView.right + dX.toInt() - backgroundCornerOffset, itemView.top, itemView.right, itemView.bottom)
+                        backgroundColor.setBounds(
+                            itemView.right + dX.toInt() - backgroundCornerOffset,
+                            itemView.top,
+                            itemView.right,
+                            itemView.bottom
+                        )
                     }
+
                     else -> {
                         backgroundColor.setBounds(0, 0, 0, 0)
                     }
@@ -223,7 +256,10 @@ class HistoryActivity : AppCompatActivity() {
                 deleteIcon.draw(c)
             }
 
-            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+            override fun clearView(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ) {
                 super.clearView(recyclerView, viewHolder)
                 viewHolder.itemView.invalidate()
             }
@@ -243,10 +279,17 @@ class HistoryActivity : AppCompatActivity() {
                 finish()
                 true
             }
+
             R.id.action_delete_all -> {
                 showDeleteAllConfirmationDialog()
                 true
             }
+
+            R.id.action_export_csv -> {
+                showExportCSVConfirmationDialog()
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -261,4 +304,108 @@ class HistoryActivity : AppCompatActivity() {
             }
             .show()
     }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun showExportCSVConfirmationDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.dialog_export_title_message))
+            .setMessage(getString(R.string.dialog_export_all_message))
+            .setNegativeButton(getString(R.string.cancel), null)
+            .setPositiveButton(getString(R.string.dialog_export_title)) { _, _ ->
+                exportCsvFile()
+            }
+            .show()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun exportCsvFile() {
+        viewModel.allRecords.value?.let { records ->
+            if (records.isEmpty()) {
+                Snackbar.make(binding.root, "No history to export", Snackbar.LENGTH_SHORT).show()
+                return
+            }
+
+            // Step 1: Prepare CSV content
+            val csvHeader = "Date,BMI,Category,Age,Gender,Weight,Height"
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+            val csvBody = records.joinToString("\n") {
+                val date = sdf.format(it.timestamp) // FIX: wrap timestamp
+                "$date,${it.bmi},${it.category},${it.age},${it.gender},${it.weight},${it.height}"
+            }
+            val csvContent = "$csvHeader\n$csvBody"
+
+            // Step 2: Use MediaStore to save to Downloads
+            val filename = "bmi_history_${
+                SimpleDateFormat(
+                    "yyyy_MM_dd",
+                    Locale.getDefault()
+                ).format(Date())
+            }.csv"
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            }
+
+            val resolver = contentResolver
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+            if (uri != null) {
+                try {
+                    resolver.openOutputStream(uri)?.use { outputStream ->
+                        outputStream.write(csvContent.toByteArray())
+                    }
+
+                    Snackbar.make(binding.root, "CSV saved to Downloads", Snackbar.LENGTH_LONG)
+                        .setAction("Open") {
+                            val openIntent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(uri, "text/csv")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            try {
+                                startActivity(Intent.createChooser(openIntent, "Open CSV with"))
+                            } catch (e: Exception) {
+                                Toast.makeText(this, "No app found to open CSV", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        }
+                        .show()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Snackbar.make(binding.root, "Failed to save CSV", Snackbar.LENGTH_SHORT).show()
+                }
+            } else {
+                Snackbar.make(binding.root, "Unable to create file", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun exportCsvFile(records: List<BmiRecord>) {
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        val fileName =
+            "bmi_history_${SimpleDateFormat("yyyy_MM_dd", Locale.getDefault()).format(Date())}.csv"
+        val csvHeader = "Date,BMI,Category,Age,Gender,Weight,Height"
+        val csvBody = records.joinToString("\n") {
+            val date = sdf.format(it.timestamp)
+            "${date},${it.bmi},${it.category},${it.age},${it.gender},${it.weight},${it.height}"
+        }
+        val content = "$csvHeader\n$csvBody"
+
+        try {
+            val file = File(cacheDir, fileName)
+            file.writeText(content)
+
+            val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_csv)))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Failed to export CSV", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 }

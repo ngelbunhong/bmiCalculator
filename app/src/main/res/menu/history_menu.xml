@@ -2,8 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_export_csv"
+        android:icon="@drawable/ic_export"
+        android:title="@string/export_as_csv"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_delete_all"
         android:icon="@drawable/ic_delete"
         android:title="@string/dialog_delete_all_title"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
+
 </menu>

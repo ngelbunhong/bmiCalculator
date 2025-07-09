@@ -59,6 +59,12 @@
     <string name="healthy_range_lbs">Healthy range: %1$s - %2$s lbs</string>
     <string name="bmi_result_format">BMI: %.1f</string>
     <string name="ideal_weight_range_format">Ideal Weight Range: %1$s - %2$s kg</string> <!-- optional if used -->
+    <string name="export_as_csv">Export as CSV</string>
+    <string name="share_csv">Share CSV</string>
+
+    <string name="dialog_export_title_message">Export All</string>
+    <string name="dialog_export_title">Export</string>
+    <string name="dialog_export_all_message">Are you sure you want to export all data? Click okay to continue.</string>
 
 
 </resources>
