@@ -26,8 +26,7 @@ import com.library.bmi.data.database.BmiRecord
 import com.library.bmi.data.factory.HistoryViewModelFactory
 import com.library.bmi.databinding.ActivityHistoryBinding
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 import kotlin.math.floor
 
 class HistoryActivity : AppCompatActivity() {
@@ -109,7 +108,6 @@ class HistoryActivity : AppCompatActivity() {
             getBmiColor(record.bmi)
         }
 
-        // Set up dataset
         val dataSet = LineDataSet(entries, "BMI History").apply {
             color = Color.GRAY
             valueTextColor = ContextCompat.getColor(this@HistoryActivity, R.color.black)
@@ -120,12 +118,18 @@ class HistoryActivity : AppCompatActivity() {
             setDrawCircleHole(true)
             valueTextSize = 10f
             mode = LineDataSet.Mode.CUBIC_BEZIER
+
+            // ✅ Ensure dot value labels show only 1 decimal place
+            valueFormatter = object : ValueFormatter() {
+                override fun getPointLabel(entry: Entry?): String {
+                    return entry?.let { String.format("%.1f", it.y) } ?: ""
+                }
+            }
         }
 
-        // Apply to chart
         binding.historyChart.data = LineData(dataSet)
 
-        // Update X-axis label formatter based on date
+        // X-axis shows dates
         binding.historyChart.xAxis.valueFormatter = object : ValueFormatter() {
             private val format = SimpleDateFormat("MMM d", Locale.getDefault())
             override fun getFormattedValue(value: Float): String {
@@ -134,11 +138,9 @@ class HistoryActivity : AppCompatActivity() {
             }
         }
 
-        // Refresh the chart
         binding.historyChart.invalidate()
         binding.historyChart.animateX(500)
     }
-
 
     private fun getBmiColor(bmi: Float): Int {
         val colorRes = when {
@@ -168,9 +170,7 @@ class HistoryActivity : AppCompatActivity() {
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
-            ): Boolean {
-                return false
-            }
+            ): Boolean = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
@@ -193,23 +193,24 @@ class HistoryActivity : AppCompatActivity() {
                 isCurrentlyActive: Boolean
             ) {
                 super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+
                 val itemView = viewHolder.itemView
                 val backgroundCornerOffset = 20
 
                 val iconMargin = (itemView.height - deleteIcon.intrinsicHeight) / 2
-                val iconTop = itemView.top + (itemView.height - deleteIcon.intrinsicHeight) / 2
+                val iconTop = itemView.top + iconMargin
                 val iconBottom = iconTop + deleteIcon.intrinsicHeight
 
                 when {
                     dX > 0 -> {
                         val iconLeft = itemView.left + iconMargin
-                        val iconRight = itemView.left + iconMargin + deleteIcon.intrinsicWidth
+                        val iconRight = iconLeft + deleteIcon.intrinsicWidth
                         deleteIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
                         backgroundColor.setBounds(itemView.left, itemView.top, itemView.left + dX.toInt() + backgroundCornerOffset, itemView.bottom)
                     }
                     dX < 0 -> {
-                        val iconLeft = itemView.right - iconMargin - deleteIcon.intrinsicWidth
                         val iconRight = itemView.right - iconMargin
+                        val iconLeft = iconRight - deleteIcon.intrinsicWidth
                         deleteIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
                         backgroundColor.setBounds(itemView.right + dX.toInt() - backgroundCornerOffset, itemView.top, itemView.right, itemView.bottom)
                     }
@@ -217,21 +218,17 @@ class HistoryActivity : AppCompatActivity() {
                         backgroundColor.setBounds(0, 0, 0, 0)
                     }
                 }
+
                 backgroundColor.draw(c)
                 deleteIcon.draw(c)
             }
 
-            /**
-             * ✅ START: This new override fixes the "stuck" red background bug.
-             * It's called when a swipe is finished or cancelled (like with an undo).
-             */
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                 super.clearView(recyclerView, viewHolder)
-                // This forces the item view to redraw itself, clearing the red background.
                 viewHolder.itemView.invalidate()
             }
-            // ✅ END: Fix for stuck background
         }
+
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.historyRecyclerView)
     }
 
